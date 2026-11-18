@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">BMI</string>
+    <string name="title">Kalkulator BMI</string>
+    <string name="hint_weight">Waga (kg)</string>
+    <string name="hint_height">Wzrost (cm)</string>
+    <string name="label_unit">Jednostki metryczne</string>
+    <string name="button_calc">Oblicz</string>
+    <string name="button_clear">Wyczyść</string>
+    <string name="result_format">BMI: %.1f – %s</string>
+    <string name="error_required">Pole wymagane</string>
+    <string name="error_weight_range">Waga 20–300 kg</string>
+    <string name="error_height_range">Wzrost 50–250 cm</string>
+    <string name="bmi_under">niedowaga</string>
+    <string name="bmi_normal">waga prawidłowa</string>
+    <string name="bmi_over">nadwaga</string>
+    <string name="bmi_obese">otyłość</string>
+</resources>
