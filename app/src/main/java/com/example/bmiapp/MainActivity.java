@@ -1,134 +1,144 @@
 package com.example.bmiapp;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String KEY_PRODUCT = "product_name";
-    private static final String KEY_QUANTITY = "quantity";
-    private static final String KEY_DELIVERY_ID = "delivery_id";
-    private static final String KEY_TERMS = "terms_accepted";
+    private static final String KEY_RESULT = "result";
 
-    private EditText editProductName;
-    private EditText editQuantity;
-    private RadioGroup radioGroupDelivery;
-    private CheckBox checkTerms;
+    private EditText editWeight;
+    private EditText editHeight;
+    private RadioGroup radioGroupUnits;
+    private TextView textResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        editProductName = findViewById(R.id.edit_product_name);
-        editQuantity = findViewById(R.id.edit_quantity);
-        radioGroupDelivery = findViewById(R.id.radio_group_delivery);
-        checkTerms = findViewById(R.id.check_terms);
-        Button buttonSave = findViewById(R.id.button_save);
+        editWeight = findViewById(R.id.edit_weight);
+        editHeight = findViewById(R.id.edit_height);
+        radioGroupUnits = findViewById(R.id.radio_group_units);
+        textResult = findViewById(R.id.text_result);
+        Button buttonCalc = findViewById(R.id.button_calc);
         Button buttonClear = findViewById(R.id.button_clear);
 
-        if (savedInstanceState != null) {
-            editProductName.setText(savedInstanceState.getString(KEY_PRODUCT, ""));
-            editQuantity.setText(savedInstanceState.getString(KEY_QUANTITY, ""));
-            int savedDeliveryId = savedInstanceState.getInt(KEY_DELIVERY_ID, -1);
-            if (savedDeliveryId != -1) {
-                radioGroupDelivery.check(savedDeliveryId);
-            }
-            checkTerms.setChecked(savedInstanceState.getBoolean(KEY_TERMS, false));
-        }
-
-        buttonSave.setOnClickListener(v -> {
-            if (validateForm()) {
-                saveForm();
-            }
+        radioGroupUnits.setOnCheckedChangeListener((group, checkedId) -> {
+            updateHints(checkedId == R.id.radio_metric);
+            editWeight.setError(null);
+            editHeight.setError(null);
         });
 
-        buttonClear.setOnClickListener(v -> clearForm());
+        buttonCalc.setOnClickListener(v -> {
+            if (validate()) {
+                calculate();
+            }
+        });
+        buttonClear.setOnClickListener(v -> clear());
+
+        if (savedInstanceState != null) {
+            String result = savedInstanceState.getString(KEY_RESULT);
+            if (result != null) {
+                textResult.setText(result);
+                textResult.setVisibility(View.VISIBLE);
+            }
+        }
+
+        updateHints(isMetricSelected());
+    }
+
+    private boolean isMetricSelected() {
+        return radioGroupUnits.getCheckedRadioButtonId() == R.id.radio_metric;
+    }
+
+    private void updateHints(boolean isMetric) {
+        if (isMetric) {
+            editWeight.setHint(R.string.hint_weight);
+            editHeight.setHint(R.string.hint_height);
+        } else {
+            editWeight.setHint(R.string.hint_weight_lb);
+            editHeight.setHint(R.string.hint_height_in);
+        }
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(KEY_PRODUCT, editProductName.getText().toString());
-        outState.putString(KEY_QUANTITY, editQuantity.getText().toString());
-        outState.putInt(KEY_DELIVERY_ID, radioGroupDelivery.getCheckedRadioButtonId());
-        outState.putBoolean(KEY_TERMS, checkTerms.isChecked());
+        if (textResult.getVisibility() == View.VISIBLE) {
+            outState.putString(KEY_RESULT, textResult.getText().toString());
+        }
     }
 
-    private boolean validateForm() {
+    private boolean validate() {
         boolean valid = true;
+        boolean metric = isMetricSelected();
 
-        String productName = editProductName.getText().toString().trim();
-        if (productName.isEmpty()) {
-            editProductName.setError(getString(R.string.error_required));
+        String weightText = editWeight.getText().toString().trim();
+        if (weightText.isEmpty()) {
+            editWeight.setError(getString(R.string.error_required));
             valid = false;
         } else {
-            editProductName.setError(null);
-        }
-
-        String quantityStr = editQuantity.getText().toString().trim();
-        if (quantityStr.isEmpty()) {
-            editQuantity.setError(getString(R.string.error_required));
-            valid = false;
-        } else {
-            try {
-                int quantity = Integer.parseInt(quantityStr);
-                if (quantity < 1 || quantity > 99) {
-                    editQuantity.setError(getString(R.string.error_quantity_range));
-                    valid = false;
-                } else {
-                    editQuantity.setError(null);
-                }
-            } catch (NumberFormatException e) {
-                editQuantity.setError(getString(R.string.error_quantity_range));
+            double weight = Double.parseDouble(weightText);
+            double weightKg = metric ? weight : weight * 0.4536;
+            if (weightKg < 20 || weightKg > 300) {
+                editWeight.setError(getString(metric ? R.string.error_weight_range : R.string.error_weight_range_lb));
                 valid = false;
             }
         }
 
-        if (radioGroupDelivery.getCheckedRadioButtonId() == -1) {
-            Toast.makeText(this, R.string.error_delivery_required, Toast.LENGTH_SHORT).show();
-            valid = false;
-        }
-
-        if (!checkTerms.isChecked()) {
-            checkTerms.setError(getString(R.string.error_terms_required));
-            Toast.makeText(this, R.string.error_terms_required, Toast.LENGTH_SHORT).show();
+        String heightText = editHeight.getText().toString().trim();
+        if (heightText.isEmpty()) {
+            editHeight.setError(getString(R.string.error_required));
             valid = false;
         } else {
-            checkTerms.setError(null);
+            double height = Double.parseDouble(heightText);
+            double heightCm = metric ? height : height * 2.54;
+            if (heightCm < 50 || heightCm > 250) {
+                editHeight.setError(getString(metric ? R.string.error_height_range : R.string.error_height_range_in));
+                valid = false;
+            }
         }
 
         return valid;
     }
 
-    private void saveForm() {
-        String productName = editProductName.getText().toString().trim();
-        int quantity = Integer.parseInt(editQuantity.getText().toString().trim());
+    private void calculate() {
+        double weight = Double.parseDouble(editWeight.getText().toString().trim());
+        double heightCm = Double.parseDouble(editHeight.getText().toString().trim());
 
-        int selectedId = radioGroupDelivery.getCheckedRadioButtonId();
-        RadioButton selectedRadio = findViewById(selectedId);
-        String deliveryMethod = selectedRadio.getText().toString();
+        if (!isMetricSelected()) {
+            weight = weight * 0.4536;     // lb -> kg
+            heightCm = heightCm * 2.54;   // in -> cm
+        }
 
-        String summary = getString(R.string.toast_summary, productName, quantity, deliveryMethod);
-        Toast.makeText(this, summary, Toast.LENGTH_LONG).show();
+        double heightM = heightCm / 100.0;
+        double bmi = weight / (heightM * heightM);
+
+        textResult.setText(getString(R.string.result_format, bmi, categoryFor(bmi)));
+        textResult.setVisibility(View.VISIBLE);
     }
 
-    private void clearForm() {
-        editProductName.setText("");
-        editQuantity.setText("");
-        editProductName.setError(null);
-        editQuantity.setError(null);
-        radioGroupDelivery.clearCheck();
-        checkTerms.setChecked(false);
-        checkTerms.setError(null);
-        editProductName.requestFocus();
+    private String categoryFor(double bmi) {
+        if (bmi < 18.5) return getString(R.string.bmi_under);
+        if (bmi < 25) return getString(R.string.bmi_normal);
+        if (bmi < 30) return getString(R.string.bmi_over);
+        return getString(R.string.bmi_obese);
+    }
+
+    private void clear() {
+        editWeight.setText("");
+        editHeight.setText("");
+        editWeight.setError(null);
+        editHeight.setError(null);
+        textResult.setVisibility(View.GONE);
+        editWeight.requestFocus();
     }
 }
