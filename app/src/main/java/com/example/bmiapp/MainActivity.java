@@ -1,79 +1,152 @@
 package com.example.bmiapp;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.SeekBar;
-import android.widget.Switch;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    private EditText editName;
-    private CheckBox checkAgree;
-    private Switch switchActive;
-    private RadioGroup radioGroupSize;
-    private SeekBar seekVolume;
-    private Button buttonCollect;
-    private TextView textSummary;
-    private TextView textSeekLabel;
+    private static final String TAG = "LifecycleTag";
+    private static final String KEY_RESULT = "result";
+
+    private EditText editWeight;
+    private EditText editHeight;
+    private CheckBox checkMetric;
+    private TextView textResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
 
-        editName = findViewById(R.id.edit_name);
-        checkAgree = findViewById(R.id.check_agree);
-        switchActive = findViewById(R.id.switch_active);
-        radioGroupSize = findViewById(R.id.radio_group_size);
-        seekVolume = findViewById(R.id.seek_volume);
-        buttonCollect = findViewById(R.id.button_collect);
-        textSummary = findViewById(R.id.text_summary);
-        textSeekLabel = findViewById(R.id.text_seek_label);
+        editWeight = findViewById(R.id.edit_weight);
+        editHeight = findViewById(R.id.edit_height);
+        checkMetric = findViewById(R.id.check_metric);
+        textResult = findViewById(R.id.text_result);
+        Button buttonCalc = findViewById(R.id.button_calc);
+        Button buttonClear = findViewById(R.id.button_clear);
 
-        seekVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                textSeekLabel.setText("Głośność / wartość: " + progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+        buttonCalc.setOnClickListener(v -> {
+            if (validate()) {
+                calculate();
             }
         });
+        buttonClear.setOnClickListener(v -> clear());
 
-        buttonCollect.setOnClickListener(v -> collectAndDisplayState());
+        if (savedInstanceState != null) {
+            String result = savedInstanceState.getString(KEY_RESULT);
+            if (result != null) {
+                textResult.setText(result);
+                textResult.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
-    private void collectAndDisplayState() {
-        String name = editName.getText().toString().trim();
-        if (name.isEmpty()) {
-            name = "Brak";
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (textResult.getVisibility() == View.VISIBLE) {
+            outState.putString(KEY_RESULT, textResult.getText().toString());
+        }
+    }
+
+    private boolean validate() {
+        boolean valid = true;
+
+        String weightText = editWeight.getText().toString().trim();
+        if (weightText.isEmpty()) {
+            editWeight.setError(getString(R.string.error_required));
+            valid = false;
+        } else {
+            double weight = Double.parseDouble(weightText);
+            if (weight < 20 || weight > 300) {
+                editWeight.setError(getString(R.string.error_weight_range));
+                valid = false;
+            }
         }
 
-        String agree = checkAgree.isChecked() ? getString(R.string.yes) : getString(R.string.no);
-        String active = switchActive.isChecked() ? getString(R.string.yes) : getString(R.string.no);
-
-        String selectedSize = "-";
-        int checkedRadioId = radioGroupSize.getCheckedRadioButtonId();
-        if (checkedRadioId != -1) {
-            RadioButton selectedButton = findViewById(checkedRadioId);
-            selectedSize = selectedButton.getText().toString();
+        String heightText = editHeight.getText().toString().trim();
+        if (heightText.isEmpty()) {
+            editHeight.setError(getString(R.string.error_required));
+            valid = false;
+        } else {
+            double height = Double.parseDouble(heightText);
+            if (height < 50 || height > 250) {
+                editHeight.setError(getString(R.string.error_height_range));
+                valid = false;
+            }
         }
 
-        int volume = seekVolume.getProgress();
+        return valid;
+    }
 
-        String summary = getString(R.string.summary_format, name, agree, active, selectedSize, volume);
-        textSummary.setText(summary);
+    private void calculate() {
+        double weight = Double.parseDouble(editWeight.getText().toString().trim());
+        double heightCm = Double.parseDouble(editHeight.getText().toString().trim());
+
+        if (!checkMetric.isChecked()) {
+            weight = weight * 0.4536;     // funty -> kg
+            heightCm = heightCm * 2.54;   // cale -> cm
+        }
+
+        double heightM = heightCm / 100;
+        double bmi = weight / (heightM * heightM);
+
+        textResult.setText(getString(R.string.result_format, bmi, categoryFor(bmi)));
+        textResult.setVisibility(View.VISIBLE);
+    }
+
+    private String categoryFor(double bmi) {
+        if (bmi < 18.5) return getString(R.string.bmi_under);
+        if (bmi < 25) return getString(R.string.bmi_normal);
+        if (bmi < 30) return getString(R.string.bmi_over);
+        return getString(R.string.bmi_obese);
+    }
+
+    private void clear() {
+        editWeight.setText("");
+        editHeight.setText("");
+        editWeight.setError(null);
+        editHeight.setError(null);
+        textResult.setVisibility(View.GONE);
+        editWeight.requestFocus();
     }
 }

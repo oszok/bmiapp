@@ -1,17 +1,17 @@
 <resources>
-    <string name="app_name">Katalog Widgetów</string>
-    <string name="cd_catalog_image">Obrazek w katalogu</string>
-    <string name="hint_name">Wpisz imię</string>
-    <string name="checkbox_agree">Wyrażam zgodę</string>
-    <string name="switch_active">Powiadomienia aktywne</string>
-    <string name="label_size">Wybierz rozmiar:</string>
-    <string name="size_s">S</string>
-    <string name="size_m">M</string>
-    <string name="size_l">L</string>
-    <string name="label_volume_default">Głośność / wartość: 70</string>
-    <string name="button_collect">Pokaż stan</string>
-    <string name="summary_placeholder">Tutaj pojawi się podsumowanie</string>
-    <string name="yes">tak</string>
-    <string name="no">nie</string>
-    <string name="summary_format">Imię: %1$s, zgoda: %2$s, przełącznik: %3$s, rozmiar: %4$s, głośność: %5$d</string>
+    <string name="app_name">BMI</string>
+    <string name="title">Kalkulator BMI</string>
+    <string name="hint_weight">Waga (kg)</string>
+    <string name="hint_height">Wzrost (cm)</string>
+    <string name="label_unit">Jednostki metryczne</string>
+    <string name="button_calc">Oblicz</string>
+    <string name="button_clear">Wyczyść</string>
+    <string name="result_format">BMI: %.1f – %s</string>
+    <string name="error_required">Pole wymagane</string>
+    <string name="error_weight_range">Waga 20–300 kg</string>
+    <string name="error_height_range">Wzrost 50–250 cm</string>
+    <string name="bmi_under">niedowaga</string>
+    <string name="bmi_normal">waga prawidłowa</string>
+    <string name="bmi_over">nadwaga</string>
+    <string name="bmi_obese">otyłość</string>
 </resources>
