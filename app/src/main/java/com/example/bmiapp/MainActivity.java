@@ -1,7 +1,8 @@
 package com.example.bmiapp;
 
 import android.os.Bundle;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -13,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "LifecycleTag";
     private static final String KEY_RESULT = "result";
 
     private EditText editWeight;
@@ -24,7 +24,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
 
         editWeight = findViewById(R.id.edit_weight);
@@ -33,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
         textResult = findViewById(R.id.text_result);
         Button buttonCalc = findViewById(R.id.button_calc);
         Button buttonClear = findViewById(R.id.button_clear);
+
+        setupLiveWeightValidation();
 
         buttonCalc.setOnClickListener(v -> {
             if (validate()) {
@@ -50,34 +51,36 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart");
-    }
+    private void setupLiveWeightValidation() {
+        editWeight.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
-    }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause");
-    }
+            @Override
+            public void afterTextChanged(Editable s) {
+                String text = s.toString().trim();
+                if (text.isEmpty()) {
+                    editWeight.setError(null);
+                    return;
+                }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy");
+                try {
+                    double weight = Double.parseDouble(text);
+                    if (weight < 20 || weight > 300) {
+                        editWeight.setError(getString(R.string.error_weight_range));
+                    } else {
+                        editWeight.setError(null);
+                    }
+                } catch (NumberFormatException e) {
+                    editWeight.setError(getString(R.string.error_weight_range));
+                }
+            }
+        });
     }
 
     @Override
